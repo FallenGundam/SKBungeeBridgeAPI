@@ -1,0 +1,114 @@
+# SKBungeeBridgeAPI
+# version: 1.0.0
+# required:
+#    skript 2.6
+#    skript-reflect
+#    BungeeBridge
+
+
+import:
+	me.dommi2212.BungeeBridge.packets.PacketGetPlayersGlobal
+	me.dommi2212.BungeeBridge.packets.PacketGetPlayersServer
+	me.dommi2212.BungeeBridge.packets.PacketGetPlayerName
+	me.dommi2212.BungeeBridge.packets.PacketMessagePlayer
+	me.dommi2212.BungeeBridge.packets.PacketRunCommand
+	me.dommi2212.BungeeBridge.packets.PacketWriteConsole
+	me.dommi2212.BungeeBridge.packets.PacketIsPlayerOnline
+	me.dommi2212.BungeeBridge.packets.PacketGetServers
+	me.dommi2212.BungeeBridge.packets.PacketIsServerOnline
+	me.dommi2212.BungeeBridge.packets.PacketConnectPlayer
+	me.dommi2212.BungeeBridge.packets.PacketTellraw
+	me.dommi2212.BungeeBridge.packets.PacketGetServerByPlayer
+	me.dommi2212.BungeeBridge.packets.PacketMessageAllPlayers
+	me.dommi2212.BungeeBridge.packets.PacketSendActionbar
+	me.dommi2212.BungeeBridge.PackedTitle
+	me.dommi2212.BungeeBridge.packets.PacketSendTitle
+	me.dommi2212.BungeeBridge.packets.PacketKickPlayer
+
+
+# get all online servers
+function bungee_getserverlist() :: strings:
+	set {_packet} to new PacketGetServers()
+	loop ...{_packet}.send():
+		set {_p} to new PacketIsServerOnline(loop-value)
+		if {_p}.send() = true:
+			add loop-value to {_r::*}
+	return {_r::*}
+
+# get all name of players from bungeecord
+function bungee_getplayerlist(server:string="none") :: strings:
+	if {_server} != "none":
+		set {_packet} to new PacketGetPlayersServer({_server})
+	else:
+		set {_packet} to new PacketGetPlayersGlobal()
+	set {_obj} to {_packet}.send()
+	loop ...{_obj}:
+		set {_p} to new PacketGetPlayerName(loop-value)
+		set {_name} to {_p}.send()
+		add {_name} to {_list::*}
+	return {_list::*}
+
+function bungee_playerIsOnline(p:offlineplayer) :: boolean:
+	set {_packet} to new PacketIsPlayerOnline(name of {_p})
+	set {_obj} to {_packet}.send()
+	if {_obj}.toString() = "ONLINE":
+		return true
+	return false
+
+function bungee_GetServerByPlayer(p:offlineplayer) :: string:
+	set {_packet} to new PacketIsPlayerOnline({_p}.getUniqueId())
+	return {_packet}.send()
+
+
+
+
+# effect
+# make bungeecord console execute command
+function bungee_executecommand(cmd:string):
+	set {_packet} to new PacketRunCommand({_cmd})
+	{_packet}.send()
+
+# print message to bungeecord console
+function bungee_writeconsole(msg:string):
+	replace all "&" with "§" in {_msg}
+	set {_packet} to new PacketWriteConsole({_msg})
+	{_packet}.send()
+# connect player to server
+function bungee_sendplayer(p:offlineplayer,server:string):
+	set {_packet} to new PacketConnectPlayer({_p}.getUniqueId(),{_server})
+	{_packet}.send()
+# kick player from bungeecord
+function bungee_kickplayer(p:offlineplayer,msg:string):
+	set {_packet} to new PacketKickPlayer({_p}.getUniqueId(),{_mag})
+	{_packet}.send()
+
+# send message to bungeecord player
+# type = message or raw(json)
+function bungee_message(p:offlineplayer,msg:string,type:string="message"):
+	replace all "&" with "§" in {_msg}
+	if {_type} = "message":
+		set {_packet} to new PacketMessagePlayer({_p}.getUniqueId(),{_msg})
+	else:
+		set {_packet} to new PacketTellraw({_p}.getUniqueId(),{_msg})
+	{_packet}.send()
+
+# broadcast jsonraw message on bungeecord
+# type = "raw" and "normal"
+function bungee_broadcast(msg:string,type:string="normal"):
+	replace all "&" with "§" in {_msg}
+	if {_type} = "raw":
+		bungee_executecommand("alertraw %{_msg}%")
+	else:
+		set {_packet} to new PacketMessageAllPlayers({_msg})
+		{_packet}.send()
+# send actionbar to bungee player
+function bungee_sendActionBar(p:offlineplayer,msg:string):
+	replace all "&" with "§" in {_msg}
+	set {_packet} to new PacketSendActionbar({_p}.getUniqueId(),{_msg})
+	{_packet}.send()
+
+# sebd title and subtitle to bungee player
+function bungee_sendTitle(p:offlineplayer,title:string,subtitle:string,time_second:integer):
+	set {_titleobj} to new PackedTitle({_title},{_subtitle},10,{_time_second}*20,10)
+	set {_packet} to new PacketSendTitle({_p}.getUniqueId(),{_titleobj})
+	{_packet}.send()

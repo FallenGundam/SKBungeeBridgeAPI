@@ -19,7 +19,7 @@ easy to use BungeeBridge plugin api
   * bungee_playerIsOnline(offlineplayer)  
     > return type: boolean  
     
-  * bungee_GetServerByPlayer(offlineplayer)
+  * bungee_GetServerByPlayer(offlineplayer)  
     get server name by player  
     > return type: string  
     
